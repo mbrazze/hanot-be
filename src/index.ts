@@ -35,6 +35,11 @@ enum AgeGroup {
   OPEN
 }
 
+enum UserRole {
+  CLUB_ADMIN
+  SUPER_ADMIN
+}
+
 interface BaseEntity {
   id: ID!
   createdAt: DateTime!
@@ -87,6 +92,7 @@ type Club implements BaseEntity {
   name: String!
   location: String!
   teams: [Team!]
+  adminUsers: [User!]
 }
 
 type Team implements BaseEntity {
@@ -159,6 +165,20 @@ type Player implements BaseEntity {
   skillsCompleted: Skills
 }
 
+type User implements BaseEntity {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  status: EntityStatus!
+  firstName: String!
+  lastName: String!
+  email: String!
+  phone: String!
+  club: Club!
+  role: UserRole!
+  permissions: [String!]!
+}
+
 type Query {
   clubs: [Club!]!
   club(id: ID!): Club
@@ -172,12 +192,62 @@ type Query {
   scout(id: ID!): Scout
   players: [Player!]!
   player(id: ID!): Player
+  users: [User!]!
+  user(id: ID!): User
 }
 
 type Mutation {
+  # Club Mutations
+  createClub(name: String!, location: String): Club!
+  updateClub(id: ID!, name: String, location: String, status: EntityStatus): Club!
+  deleteClub(id: ID!): Club!
+
+  # Team Mutations
+  createTeam(clubId: ID!, name: String!, ageGroup: AgeGroup!): Team!
+  updateTeam(id: ID!, name: String, clubId: ID, ageGroup: AgeGroup, status: EntityStatus): Team!
+  deleteTeam(id: ID!): Team!
+
+  # Manager Mutations
+  createManager(teamId: ID!, name: String!, contactNumber: String, email: String, experienceYears: Int): Manager!
+  updateManager(id: ID!, name: String, contactNumber: String, email: String, experienceYears: Int, status: EntityStatus): Manager!
+  deleteManager(id: ID!): Manager!
+
+  # Coach Mutations
+  createCoach(teamId: ID!, name: String!, specialization: String, contactNumber: String, email: String): Coach!
+  updateCoach(id: ID!, name: String, specialization: String, contactNumber: String, email: String, status: EntityStatus): Coach!
+  deleteCoach(id: ID!): Coach!
+
+  # Scout Mutations
+  createScout(teamId: ID!, name: String!, regions: [String!]!, contactNumber: String, email: String): Scout!
+  updateScout(id: ID!, name: String, regions: [String!], contactNumber: String, email: String, status: EntityStatus): Scout!
+  deleteScout(id: ID!): Scout!
+
+  # Player Mutations
   createPlayer(teamId: ID!, name: String!, dateOfBirth: String!, positions: [Position!]!, preferredFoot: String!, region: String): Player!
-  createCoach(teamId: ID!, name: String!, contactNumber: String, email: String): Coach!
-  # (Other mutations can be added similarly.)
+  updatePlayer(id: ID!, name: String, dateOfBirth: String, positions: [Position!], preferredFoot: String, region: String, status: EntityStatus): Player!
+  deletePlayer(id: ID!): Player!
+
+  # User Mutations (Admin Users for Club Management)
+  createUser(
+    clubId: ID!,
+    firstName: String!,
+    lastName: String!,
+    email: String!,
+    phone: String!,
+    role: UserRole!,
+    permissions: [String!]!
+  ): User!
+  updateUser(
+    id: ID!,
+    firstName: String,
+    lastName: String,
+    email: String,
+    phone: String,
+    role: UserRole,
+    permissions: [String!],
+    status: EntityStatus
+  ): User!
+  deleteUser(id: ID!): User!
 }
 
 type Subscription {
@@ -187,6 +257,7 @@ type Subscription {
   coachAdded: Coach!
   scoutAdded: Scout!
   playerAdded: Player!
+  userAdded: User!
 }
 
 schema {
