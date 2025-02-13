@@ -1,0 +1,6 @@
+schema: './src/graphql/schema.ts' # path to your schema file
+generates:
+  ./src/generated/graphql.ts: # output file for generated types
+    plugins:
+      - 'typescript'
+      - 'typescript-resolvers'

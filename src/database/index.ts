@@ -1,4 +1,3 @@
-// mockData/data.ts
 const now = new Date().toISOString();
 
 function createManager(clubId: string, teamId: string, suffix: string) {
@@ -102,7 +101,7 @@ export const clubs = [
         status: 'ACTIVE',
         name: 'Greenwood Under 10',
         ageGroup: 'UNDER_10',
-        club: null, // will be set later
+        club: {}, // will be set later
         manager: createManager('club1', 'club1-team1', 'One'),
         coaches: [
           createCoach('club1', 'club1-team1', 1),
@@ -120,7 +119,7 @@ export const clubs = [
         status: 'ACTIVE',
         name: 'Greenwood Under 12',
         ageGroup: 'UNDER_12',
-        club: null,
+        club: {},
         manager: createManager('club1', 'club1-team2', 'Two'),
         coaches: [
           createCoach('club1', 'club1-team2', 1),
@@ -148,7 +147,7 @@ export const clubs = [
         status: 'ACTIVE',
         name: 'Lakeside Under 14',
         ageGroup: 'UNDER_14',
-        club: null,
+        club: {},
         manager: createManager('club2', 'club2-team1', 'One'),
         coaches: [
           createCoach('club2', 'club2-team1', 1),
@@ -166,7 +165,7 @@ export const clubs = [
         status: 'ACTIVE',
         name: 'Lakeside Under 16',
         ageGroup: 'UNDER_16',
-        club: null,
+        club: {},
         manager: createManager('club2', 'club2-team2', 'Two'),
         coaches: [
           createCoach('club2', 'club2-team2', 1),
