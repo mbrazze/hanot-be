@@ -1,11 +1,110 @@
+import {
+  EntityStatus,
+  AgeGroup,
+  Position,
+  SkillLevel,
+} from '../generated/graphql';
+
+interface BaseEntity {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  status: EntityStatus;
+}
+
+interface ParentGuardian {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
+interface VideoHighlight {
+  id: string;
+  title: string;
+  description: string;
+}
+
+interface Statistics {
+  gamesPlayed: number;
+  goalsScored: number;
+  assists: number;
+  cleanSheets: number;
+}
+
+interface Skills {
+  ballMasteryTier: SkillLevel[];
+  passingTier: SkillLevel[];
+  shootingTier: SkillLevel[];
+  physicalTier: SkillLevel[];
+  dribblingTier: SkillLevel[];
+  footballIqTier: SkillLevel[];
+}
+
+interface Player extends BaseEntity {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  positions: Position[];
+  preferredFoot: 'LEFT' | 'RIGHT';
+  clubs: Club[];
+  teams: Team[];
+  region: string;
+  parentGuardians: ParentGuardian[];
+  statistics: Statistics;
+  videoHighlights: VideoHighlight[];
+  skillsCompleted: Skills;
+}
+
+interface User extends BaseEntity {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  teams: Team[];
+}
+
+interface Manager extends User {
+  // Add any manager-specific properties here
+}
+
+interface Coach extends User {
+  // Add any coach-specific properties here
+}
+
+interface Scout extends User {
+  assignedAgeGroups: AgeGroup[];
+}
+
+interface Team extends BaseEntity {
+  name: string;
+  ageGroup: AgeGroup;
+  club: Club;
+  manager: Manager;
+  coaches: Coach[];
+  scouts: Scout[];
+  players: Player[];
+}
+
+interface Club extends BaseEntity {
+  name: string;
+  location: string;
+  teams: Team[];
+}
+
 const now = new Date().toISOString();
 
-function createManager(clubId: string, teamId: string, suffix: string) {
+function createManager(
+  clubId: string,
+  teamId: string,
+  suffix: string
+): Manager {
   return {
     id: `${teamId}-manager`,
     createdAt: now,
     updatedAt: now,
-    status: 'ACTIVE',
+    status: EntityStatus.Active,
     firstName: 'John',
     lastName: suffix,
     email: `manager@${clubId}.com`,
@@ -14,12 +113,12 @@ function createManager(clubId: string, teamId: string, suffix: string) {
   };
 }
 
-function createCoach(clubId: string, teamId: string, coachNum: number) {
+function createCoach(clubId: string, teamId: string, coachNum: number): Coach {
   return {
     id: `${teamId}-coach${coachNum}`,
     createdAt: now,
     updatedAt: now,
-    status: 'ACTIVE',
+    status: EntityStatus.Active,
     firstName: 'Alice',
     lastName: `Coach${coachNum}`,
     email: `coach${coachNum}@${clubId}.com`,
@@ -28,12 +127,16 @@ function createCoach(clubId: string, teamId: string, coachNum: number) {
   };
 }
 
-function createScout(clubId: string, teamId: string, ageGroup: string) {
+function createScout(
+  clubId: string,
+  teamId: string,
+  ageGroup: AgeGroup
+): Scout {
   return {
     id: `${teamId}-scout`,
     createdAt: now,
     updatedAt: now,
-    status: 'ACTIVE',
+    status: EntityStatus.Active,
     firstName: 'Sam',
     lastName: 'Scout',
     email: `scout@${clubId}.com`,
@@ -43,16 +146,20 @@ function createScout(clubId: string, teamId: string, ageGroup: string) {
   };
 }
 
-function createPlayer(clubId: string, teamId: string, playerNum: number) {
+function createPlayer(
+  clubId: string,
+  teamId: string,
+  playerNum: number
+): Player {
   return {
     id: `${teamId}-player${playerNum}`,
     createdAt: now,
     updatedAt: now,
-    status: 'ACTIVE',
+    status: EntityStatus.Active,
     firstName: `Player${playerNum}`,
     lastName: 'Lastname',
     dateOfBirth: '2012-01-01',
-    positions: ['MIDFIELDER'],
+    positions: [Position.Midfielder],
     preferredFoot: 'RIGHT',
     clubs: [],
     teams: [],
@@ -75,22 +182,22 @@ function createPlayer(clubId: string, teamId: string, playerNum: number) {
       },
     ],
     skillsCompleted: {
-      ballMasteryTier: ['Tier1'],
-      passingTier: ['Tier1'],
-      shootingTier: ['Tier1'],
-      physicalTier: ['Tier1'],
-      dribblingTier: ['Tier1'],
-      footballIqTier: ['Tier1'],
+      ballMasteryTier: [SkillLevel.Bronze],
+      passingTier: [SkillLevel.Bronze],
+      shootingTier: [SkillLevel.Bronze],
+      physicalTier: [SkillLevel.Bronze],
+      dribblingTier: [SkillLevel.Bronze],
+      footballIqTier: [SkillLevel.Bronze],
     },
   };
 }
 
-export const clubs = [
+export const clubs: Club[] = [
   {
     id: 'club1',
     createdAt: now,
     updatedAt: now,
-    status: 'ACTIVE',
+    status: EntityStatus.Active,
     name: 'Greenwood FC',
     location: 'Greenwood',
     teams: [
@@ -98,16 +205,16 @@ export const clubs = [
         id: 'club1-team1',
         createdAt: now,
         updatedAt: now,
-        status: 'ACTIVE',
+        status: EntityStatus.Active,
         name: 'Greenwood Under 10',
-        ageGroup: 'UNDER_10',
-        club: {}, // will be set later
+        ageGroup: AgeGroup.Under_10,
+        club: {} as Club, // will be set later
         manager: createManager('club1', 'club1-team1', 'One'),
         coaches: [
           createCoach('club1', 'club1-team1', 1),
           createCoach('club1', 'club1-team1', 2),
         ],
-        scouts: [createScout('club1', 'club1-team1', 'UNDER_10')],
+        scouts: [createScout('club1', 'club1-team1', AgeGroup.Under_10)],
         players: Array.from({ length: 15 }, (_, i) =>
           createPlayer('club1', 'club1-team1', i + 1)
         ),
@@ -116,16 +223,16 @@ export const clubs = [
         id: 'club1-team2',
         createdAt: now,
         updatedAt: now,
-        status: 'ACTIVE',
+        status: EntityStatus.Active,
         name: 'Greenwood Under 12',
-        ageGroup: 'UNDER_12',
-        club: {},
+        ageGroup: AgeGroup.Under_12,
+        club: {} as Club,
         manager: createManager('club1', 'club1-team2', 'Two'),
         coaches: [
           createCoach('club1', 'club1-team2', 1),
           createCoach('club1', 'club1-team2', 2),
         ],
-        scouts: [createScout('club1', 'club1-team2', 'UNDER_12')],
+        scouts: [createScout('club1', 'club1-team2', AgeGroup.Under_12)],
         players: Array.from({ length: 15 }, (_, i) =>
           createPlayer('club1', 'club1-team2', i + 1)
         ),
@@ -136,7 +243,7 @@ export const clubs = [
     id: 'club2',
     createdAt: now,
     updatedAt: now,
-    status: 'ACTIVE',
+    status: EntityStatus.Active,
     name: 'Lakeside FC',
     location: 'Lakeside',
     teams: [
@@ -144,16 +251,16 @@ export const clubs = [
         id: 'club2-team1',
         createdAt: now,
         updatedAt: now,
-        status: 'ACTIVE',
+        status: EntityStatus.Active,
         name: 'Lakeside Under 14',
-        ageGroup: 'UNDER_14',
-        club: {},
+        ageGroup: AgeGroup.Under_14,
+        club: {} as Club,
         manager: createManager('club2', 'club2-team1', 'One'),
         coaches: [
           createCoach('club2', 'club2-team1', 1),
           createCoach('club2', 'club2-team1', 2),
         ],
-        scouts: [createScout('club2', 'club2-team1', 'UNDER_14')],
+        scouts: [createScout('club2', 'club2-team1', AgeGroup.Under_14)],
         players: Array.from({ length: 15 }, (_, i) =>
           createPlayer('club2', 'club2-team1', i + 1)
         ),
@@ -162,16 +269,16 @@ export const clubs = [
         id: 'club2-team2',
         createdAt: now,
         updatedAt: now,
-        status: 'ACTIVE',
+        status: EntityStatus.Active,
         name: 'Lakeside Under 16',
-        ageGroup: 'UNDER_16',
-        club: {},
+        ageGroup: AgeGroup.Under_16,
+        club: {} as Club,
         manager: createManager('club2', 'club2-team2', 'Two'),
         coaches: [
           createCoach('club2', 'club2-team2', 1),
           createCoach('club2', 'club2-team2', 2),
         ],
-        scouts: [createScout('club2', 'club2-team2', 'UNDER_16')],
+        scouts: [createScout('club2', 'club2-team2', AgeGroup.Under_16)],
         players: Array.from({ length: 15 }, (_, i) =>
           createPlayer('club2', 'club2-team2', i + 1)
         ),
@@ -197,3 +304,5 @@ for (const club of clubs) {
     });
   }
 }
+
+export default clubs;
