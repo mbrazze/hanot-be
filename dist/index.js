@@ -35,3 +35,4 @@ const { url } = await startStandaloneServer(server, {
     listen: { port: process.env.PORT ? parseInt(process.env.PORT) : 4000 },
 });
 console.log(`🚀 Server ready at: ${url}`);
+//# sourceMappingURL=index.js.map

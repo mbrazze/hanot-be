@@ -1,40 +1,49 @@
 import { initializeApp, cert, type ServiceAccount } from 'firebase-admin/app';
 import { type Firestore, getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
-import type { StandaloneServerContextFunctionArgument } from '@apollo/server/dist/esm/standalone';
+import type { StandaloneServerContextFunctionArgument } from '@apollo/server/standalone';
 import { userCollectionNameFromUserType } from '../user/utils';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
+
+// Get the current file's directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Read and parse the service account file
+const serviceAccount = JSON.parse(
+  readFileSync(join(__dirname, './admin-service-account.json'), 'utf-8')
+) as ServiceAccount;
 
 // Initialize Firebase Admin SDK
-const serviceAccount = require('./admin-service-account.json');
-
 initializeApp({
-  credential: cert(serviceAccount as ServiceAccount),
+  credential: cert(serviceAccount),
 });
 
 const db = getFirestore();
 const auth = getAuth();
 
 // Define the context interface
-
-enum UserType {
+export enum UserType {
   MANAGER = 'manager',
   COACH = 'coach',
   SCOUT = 'scout',
   PLAYER = 'player',
   ADMIN = 'admin',
 }
+
 export interface Context {
   user: {
     userType: UserType;
     createdAt: string;
     updatedAt: string;
     email: string;
-    teamIds: never[];
-    clubIds: any;
+    teamIds: string[];
+    clubIds: string[];
     id: string;
     role: string;
     managedTeams?: string[];
-    // Add any other user properties you need
   } | null;
   db: Firestore;
 }
@@ -63,9 +72,9 @@ export async function createContext({
         throw new Error('User not found');
       }
 
-      let userDataCollection = userCollectionNameFromUserType(
-        userType.data()?.userType
-      );
+      const userTypeValue = userType.data()?.userType as UserType;
+      const userDataCollection = userCollectionNameFromUserType(userTypeValue);
+
       if (!userDataCollection) {
         throw new Error('User type not found');
       }
@@ -79,7 +88,7 @@ export async function createContext({
 
       if (userData) {
         context.user = {
-          userType: userType.data()?.userType,
+          userType: userTypeValue,
           createdAt: userData.createdAt,
           updatedAt: userData.updatedAt,
           email: userData.email,
@@ -88,7 +97,6 @@ export async function createContext({
           id: decodedToken.uid,
           role: userData.role || 'user',
           managedTeams: userData.managedTeams || [],
-          // Add other user properties as needed
         };
       }
     } catch (error) {

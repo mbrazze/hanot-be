@@ -3,9 +3,9 @@
     "rootDir": "src",
     "outDir": "dist",
     "lib": ["es2022"],
-    "target": "es2022",
-    "module": "ES2022",
-    "moduleResolution": "node",
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "types": ["node"],
     "strict": true,
@@ -14,8 +14,17 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "declaration": true,
+    "declarationMap": true
   },
-  "include": ["src"],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifiers": true
+  },
+  "include": ["src/**/*"],
   "exclude": ["node_modules"]
 }

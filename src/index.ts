@@ -1,42 +1,22 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { Context, createContext } from './app/context/contextProvider';
+import { type Context, createContext } from './app/context/contextProvider';
+import resolvers from './resolvers';
+import typeDefs from './graphql/schema';
 
-const typeDefs = `#graphql
-  type Query {
-    hello: String
-    userInfo: UserInfo
-  }
-
-  type UserInfo {
-    uid: String
-    role: String
-  }
-`;
-
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world!',
-    userInfo: (_: any, __: any, context: Context) => {
-      if (!context.user) {
-        throw new Error('Not authenticated');
-      }
-      return {
-        uid: context.user.id,
-        role: context.user.role,
-      };
-    },
-  },
-};
-
-const server = new ApolloServer({
+const server = new ApolloServer<Context>({
   typeDefs,
   resolvers,
 });
 
-const { url } = await startStandaloneServer(server, {
-  context: createContext,
-  listen: { port: process.env.PORT ? parseInt(process.env.PORT) : 4000 },
-});
-
-console.log(`🚀 Server ready at: ${url}`);
+try {
+  const { url } = await startStandaloneServer(server, {
+    context: createContext,
+    listen: {
+      port: process.env.PORT ? Number.parseInt(process.env.PORT) : 4000,
+    },
+  });
+  console.log(`🚀 Server ready at: ${url}`);
+} catch (error) {
+  console.error('Failed to start the server:', error);
+}
