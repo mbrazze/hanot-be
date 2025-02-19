@@ -10,6 +10,8 @@ const typeDefs = gql`
     PENDING
   }
 
+  union User = Admin | Manager | Coach | Scout | Player
+
   enum AgeGroup {
     UNDER_7
     UNDER_8
@@ -31,7 +33,7 @@ const typeDefs = gql`
     OPEN
   }
 
-  enum UserRole {
+  enum AdminRole {
     SUPER_ADMIN
     CLUB_ADMIN
     TEAM_MANAGER
@@ -104,7 +106,7 @@ const typeDefs = gql`
     name: String!
     location: String!
     teams: [Team!]
-    adminUsers: [User!]
+    adminAdmins: [Admin!]
   }
 
   type Team implements BaseEntity {
@@ -115,10 +117,10 @@ const typeDefs = gql`
     name: String!
     ageGroup: AgeGroup!
     club: Club!
-    manager: User
-    coaches: [Coach!]
-    players: [Player!]
-    scouts: [Scout!]
+    manager: Manager
+    coaches: [Coach!]!
+    players: [Player!]!
+    scouts: [Scout!]!
   }
 
   type Player implements BaseEntity {
@@ -131,17 +133,17 @@ const typeDefs = gql`
     dateOfBirth: String!
     positions: [Position!]
     preferredFoot: String!
-    clubs: [Club!]
-    teams: [Team!]
+    clubs: [Club!]!
+    teams: [Team!]!
     city: String
     region: String
-    parentGuardians: [ParentGuardian!]
+    parentGuardians: [ParentGuardian!]!
     statistics: Statistics
-    videoHighlights: [VideoHighlight!]
+    videoHighlights: [VideoHighlight!]!
     skillsCompleted: Skills
   }
 
-  type User implements BaseEntity {
+  type Admin implements BaseEntity {
     id: ID!
     createdAt: DateTime!
     updatedAt: DateTime!
@@ -149,10 +151,6 @@ const typeDefs = gql`
     firstName: String!
     lastName: String!
     email: String!
-    phone: String!
-    role: UserRole!
-    teams: [Team!]
-    managedTeams: [Team!]
   }
 
   type Manager implements BaseEntity {
@@ -164,9 +162,7 @@ const typeDefs = gql`
     lastName: String!
     email: String!
     phone: String!
-    role: UserRole!
-    teams: [Team!]
-    managedTeams: [Team!]
+    teams: [Team!]!
   }
 
   type Coach implements BaseEntity {
@@ -178,9 +174,7 @@ const typeDefs = gql`
     lastName: String!
     email: String!
     phone: String!
-    role: UserRole!
     teams: [Team!]
-    managedTeams: [Team!]
   }
 
   type Scout implements BaseEntity {
@@ -192,7 +186,6 @@ const typeDefs = gql`
     lastName: String!
     email: String!
     phone: String!
-    role: UserRole!
     teams: [Team!]
   }
 
@@ -200,6 +193,12 @@ const typeDefs = gql`
     DIRECT_ADD
     INVITATION
     REQUEST
+  }
+
+  enum InvitationStatus {
+    PENDING
+    ACCEPTED
+    DECLINED
   }
 
   type Invitation implements BaseEntity {
@@ -211,6 +210,7 @@ const typeDefs = gql`
     teamId: ID!
     invitedBy: ID!
     type: InvitationType!
+    status: InvitationStatus!
   }
 
   type Query {
@@ -226,8 +226,8 @@ const typeDefs = gql`
     scout(id: ID!): Scout
     players: [Player!]!
     player(id: ID!): Player
-    users: [User!]!
-    user(id: ID!): User
+    admins: [Admin!]!
+    admin(id: ID!): Admin
     me: User!
     myTeams: [Team!]!
     pendingInvitations: [Invitation!]!
@@ -285,7 +285,7 @@ const typeDefs = gql`
       lastName: String!
       email: String!
       phone: String!
-    ): User!
+    ): Coach!
     updateCoach(
       id: ID!
       firstName: String
@@ -293,33 +293,33 @@ const typeDefs = gql`
       email: String
       phone: String
       status: EntityStatus
-    ): User!
-    deleteCoach(id: ID!): User!
+    ): Coach!
+    deleteCoach(id: ID!): ID!
 
-    createUser(
+    createAdmin(
       firstName: String!
       lastName: String!
       email: String!
       phone: String!
-      role: UserRole!
-    ): User!
-    updateUser(
+      role: AdminRole!
+    ): Admin!
+    updateAdmin(
       id: ID!
       firstName: String
       lastName: String
       email: String
       phone: String
-      role: UserRole
+      role: AdminRole
       status: EntityStatus
-    ): User!
-    deleteUser(id: ID!): User!
+    ): Admin!
+    deleteAdmin(id: ID!): Admin!
   }
 
   type Subscription {
     clubAdded: Club!
     teamAdded: Team!
     playerAdded: Player!
-    userAdded: User!
+    adminAdded: Admin!
   }
 
   schema {

@@ -17,6 +17,26 @@ export type Scalars = {
   DateTime: { input: any; output: any; }
 };
 
+export type Admin = BaseEntity & {
+  __typename?: 'Admin';
+  createdAt: Scalars['DateTime']['output'];
+  email: Scalars['String']['output'];
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lastName: Scalars['String']['output'];
+  status: EntityStatus;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export enum AdminRole {
+  ClubAdmin = 'CLUB_ADMIN',
+  Coach = 'COACH',
+  Player = 'PLAYER',
+  Scout = 'SCOUT',
+  SuperAdmin = 'SUPER_ADMIN',
+  TeamManager = 'TEAM_MANAGER'
+}
+
 export enum AgeGroup {
   Open = 'OPEN',
   Under_7 = 'UNDER_7',
@@ -47,7 +67,7 @@ export type BaseEntity = {
 
 export type Club = BaseEntity & {
   __typename?: 'Club';
-  adminUsers?: Maybe<Array<User>>;
+  adminAdmins?: Maybe<Array<Admin>>;
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   location: Scalars['String']['output'];
@@ -64,9 +84,7 @@ export type Coach = BaseEntity & {
   firstName: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   lastName: Scalars['String']['output'];
-  managedTeams?: Maybe<Array<Team>>;
   phone: Scalars['String']['output'];
-  role: UserRole;
   status: EntityStatus;
   teams?: Maybe<Array<Team>>;
   updatedAt: Scalars['DateTime']['output'];
@@ -85,11 +103,17 @@ export type Invitation = BaseEntity & {
   id: Scalars['ID']['output'];
   invitedBy: Scalars['ID']['output'];
   playerId: Scalars['ID']['output'];
-  status: EntityStatus;
+  status: InvitationStatus;
   teamId: Scalars['ID']['output'];
   type: InvitationType;
   updatedAt: Scalars['DateTime']['output'];
 };
+
+export enum InvitationStatus {
+  Accepted = 'ACCEPTED',
+  Declined = 'DECLINED',
+  Pending = 'PENDING'
+}
 
 export enum InvitationType {
   DirectAdd = 'DIRECT_ADD',
@@ -104,31 +128,38 @@ export type Manager = BaseEntity & {
   firstName: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   lastName: Scalars['String']['output'];
-  managedTeams?: Maybe<Array<Team>>;
   phone: Scalars['String']['output'];
-  role: UserRole;
   status: EntityStatus;
-  teams?: Maybe<Array<Team>>;
+  teams: Array<Team>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
+  createAdmin: Admin;
   createClub: Club;
-  createCoach: User;
+  createCoach: Coach;
   createPlayer: Player;
   createTeam: Team;
-  createUser: User;
+  deleteAdmin: Admin;
   deleteClub: Club;
-  deleteCoach: User;
+  deleteCoach: Scalars['ID']['output'];
   deletePlayer: Player;
   deleteTeam: Team;
-  deleteUser: User;
+  updateAdmin: Admin;
   updateClub: Club;
-  updateCoach: User;
+  updateCoach: Coach;
   updatePlayer: Player;
   updateTeam: Team;
-  updateUser: User;
+};
+
+
+export type MutationCreateAdminArgs = {
+  email: Scalars['String']['input'];
+  firstName: Scalars['String']['input'];
+  lastName: Scalars['String']['input'];
+  phone: Scalars['String']['input'];
+  role: AdminRole;
 };
 
 
@@ -167,12 +198,8 @@ export type MutationCreateTeamArgs = {
 };
 
 
-export type MutationCreateUserArgs = {
-  email: Scalars['String']['input'];
-  firstName: Scalars['String']['input'];
-  lastName: Scalars['String']['input'];
-  phone: Scalars['String']['input'];
-  role: UserRole;
+export type MutationDeleteAdminArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -196,8 +223,14 @@ export type MutationDeleteTeamArgs = {
 };
 
 
-export type MutationDeleteUserArgs = {
+export type MutationUpdateAdminArgs = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  role?: InputMaybe<AdminRole>;
+  status?: InputMaybe<EntityStatus>;
 };
 
 
@@ -240,17 +273,6 @@ export type MutationUpdateTeamArgs = {
   status?: InputMaybe<EntityStatus>;
 };
 
-
-export type MutationUpdateUserArgs = {
-  email?: InputMaybe<Scalars['String']['input']>;
-  firstName?: InputMaybe<Scalars['String']['input']>;
-  id: Scalars['ID']['input'];
-  lastName?: InputMaybe<Scalars['String']['input']>;
-  phone?: InputMaybe<Scalars['String']['input']>;
-  role?: InputMaybe<UserRole>;
-  status?: InputMaybe<EntityStatus>;
-};
-
 export type ParentGuardian = {
   __typename?: 'ParentGuardian';
   email: Scalars['String']['output'];
@@ -263,22 +285,22 @@ export type ParentGuardian = {
 export type Player = BaseEntity & {
   __typename?: 'Player';
   city?: Maybe<Scalars['String']['output']>;
-  clubs?: Maybe<Array<Club>>;
+  clubs: Array<Club>;
   createdAt: Scalars['DateTime']['output'];
   dateOfBirth: Scalars['String']['output'];
   firstName: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   lastName: Scalars['String']['output'];
-  parentGuardians?: Maybe<Array<ParentGuardian>>;
+  parentGuardians: Array<ParentGuardian>;
   positions?: Maybe<Array<Position>>;
   preferredFoot: Scalars['String']['output'];
   region?: Maybe<Scalars['String']['output']>;
   skillsCompleted?: Maybe<Skills>;
   statistics?: Maybe<Statistics>;
   status: EntityStatus;
-  teams?: Maybe<Array<Team>>;
+  teams: Array<Team>;
   updatedAt: Scalars['DateTime']['output'];
-  videoHighlights?: Maybe<Array<VideoHighlight>>;
+  videoHighlights: Array<VideoHighlight>;
 };
 
 export enum Position {
@@ -290,6 +312,8 @@ export enum Position {
 
 export type Query = {
   __typename?: 'Query';
+  admin?: Maybe<Admin>;
+  admins: Array<Admin>;
   club?: Maybe<Club>;
   clubs: Array<Club>;
   coach?: Maybe<Coach>;
@@ -307,8 +331,11 @@ export type Query = {
   team?: Maybe<Team>;
   teamPlayers: Array<Player>;
   teams: Array<Team>;
-  user?: Maybe<User>;
-  users: Array<User>;
+};
+
+
+export type QueryAdminArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -346,11 +373,6 @@ export type QueryTeamPlayersArgs = {
   teamId: Scalars['ID']['input'];
 };
 
-
-export type QueryUserArgs = {
-  id: Scalars['ID']['input'];
-};
-
 export type Scout = BaseEntity & {
   __typename?: 'Scout';
   createdAt: Scalars['DateTime']['output'];
@@ -359,7 +381,6 @@ export type Scout = BaseEntity & {
   id: Scalars['ID']['output'];
   lastName: Scalars['String']['output'];
   phone: Scalars['String']['output'];
-  role: UserRole;
   status: EntityStatus;
   teams?: Maybe<Array<Team>>;
   updatedAt: Scalars['DateTime']['output'];
@@ -398,50 +419,28 @@ export type Statistics = {
 
 export type Subscription = {
   __typename?: 'Subscription';
+  adminAdded: Admin;
   clubAdded: Club;
   playerAdded: Player;
   teamAdded: Team;
-  userAdded: User;
 };
 
 export type Team = BaseEntity & {
   __typename?: 'Team';
   ageGroup: AgeGroup;
   club: Club;
-  coaches?: Maybe<Array<Coach>>;
+  coaches: Array<Coach>;
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
-  manager?: Maybe<User>;
+  manager?: Maybe<Manager>;
   name: Scalars['String']['output'];
-  players?: Maybe<Array<Player>>;
-  scouts?: Maybe<Array<Scout>>;
+  players: Array<Player>;
+  scouts: Array<Scout>;
   status: EntityStatus;
   updatedAt: Scalars['DateTime']['output'];
 };
 
-export type User = BaseEntity & {
-  __typename?: 'User';
-  createdAt: Scalars['DateTime']['output'];
-  email: Scalars['String']['output'];
-  firstName: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  lastName: Scalars['String']['output'];
-  managedTeams?: Maybe<Array<Team>>;
-  phone: Scalars['String']['output'];
-  role: UserRole;
-  status: EntityStatus;
-  teams?: Maybe<Array<Team>>;
-  updatedAt: Scalars['DateTime']['output'];
-};
-
-export enum UserRole {
-  ClubAdmin = 'CLUB_ADMIN',
-  Coach = 'COACH',
-  Player = 'PLAYER',
-  Scout = 'SCOUT',
-  SuperAdmin = 'SUPER_ADMIN',
-  TeamManager = 'TEAM_MANAGER'
-}
+export type User = Admin | Coach | Manager | Player | Scout;
 
 export type VideoHighlight = {
   __typename?: 'VideoHighlight';
@@ -517,14 +516,20 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
   info: GraphQLResolveInfo
 ) => TResult | Promise<TResult>;
 
+/** Mapping of union types */
+export type ResolversUnionTypes<_RefType extends Record<string, unknown>> = {
+  User: ( Admin ) | ( Coach ) | ( Manager ) | ( Player ) | ( Scout );
+};
 
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = {
-  BaseEntity: ( Club ) | ( Coach ) | ( Invitation ) | ( Manager ) | ( Player ) | ( Scout ) | ( Team ) | ( User );
+  BaseEntity: ( Admin ) | ( Club ) | ( Coach ) | ( Invitation ) | ( Manager ) | ( Player ) | ( Scout ) | ( Team );
 };
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  Admin: ResolverTypeWrapper<Admin>;
+  AdminRole: AdminRole;
   AgeGroup: AgeGroup;
   BaseEntity: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['BaseEntity']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
@@ -535,6 +540,7 @@ export type ResolversTypes = {
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Invitation: ResolverTypeWrapper<Invitation>;
+  InvitationStatus: InvitationStatus;
   InvitationType: InvitationType;
   Manager: ResolverTypeWrapper<Manager>;
   Mutation: ResolverTypeWrapper<{}>;
@@ -550,13 +556,13 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Subscription: ResolverTypeWrapper<{}>;
   Team: ResolverTypeWrapper<Team>;
-  User: ResolverTypeWrapper<User>;
-  UserRole: UserRole;
+  User: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>['User']>;
   VideoHighlight: ResolverTypeWrapper<VideoHighlight>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  Admin: Admin;
   BaseEntity: ResolversInterfaceTypes<ResolversParentTypes>['BaseEntity'];
   Boolean: Scalars['Boolean']['output'];
   Club: Club;
@@ -577,12 +583,23 @@ export type ResolversParentTypes = {
   String: Scalars['String']['output'];
   Subscription: {};
   Team: Team;
-  User: User;
+  User: ResolversUnionTypes<ResolversParentTypes>['User'];
   VideoHighlight: VideoHighlight;
 };
 
+export type AdminResolvers<ContextType = any, ParentType extends ResolversParentTypes['Admin'] = ResolversParentTypes['Admin']> = {
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['EntityStatus'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type BaseEntityResolvers<ContextType = any, ParentType extends ResolversParentTypes['BaseEntity'] = ResolversParentTypes['BaseEntity']> = {
-  __resolveType: TypeResolveFn<'Club' | 'Coach' | 'Invitation' | 'Manager' | 'Player' | 'Scout' | 'Team' | 'User', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Admin' | 'Club' | 'Coach' | 'Invitation' | 'Manager' | 'Player' | 'Scout' | 'Team', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   status?: Resolver<ResolversTypes['EntityStatus'], ParentType, ContextType>;
@@ -590,7 +607,7 @@ export type BaseEntityResolvers<ContextType = any, ParentType extends ResolversP
 };
 
 export type ClubResolvers<ContextType = any, ParentType extends ResolversParentTypes['Club'] = ResolversParentTypes['Club']> = {
-  adminUsers?: Resolver<Maybe<Array<ResolversTypes['User']>>, ParentType, ContextType>;
+  adminAdmins?: Resolver<Maybe<Array<ResolversTypes['Admin']>>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   location?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -607,9 +624,7 @@ export type CoachResolvers<ContextType = any, ParentType extends ResolversParent
   firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  managedTeams?: Resolver<Maybe<Array<ResolversTypes['Team']>>, ParentType, ContextType>;
   phone?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  role?: Resolver<ResolversTypes['UserRole'], ParentType, ContextType>;
   status?: Resolver<ResolversTypes['EntityStatus'], ParentType, ContextType>;
   teams?: Resolver<Maybe<Array<ResolversTypes['Team']>>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
@@ -625,7 +640,7 @@ export type InvitationResolvers<ContextType = any, ParentType extends ResolversP
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   invitedBy?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   playerId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  status?: Resolver<ResolversTypes['EntityStatus'], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['InvitationStatus'], ParentType, ContextType>;
   teamId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['InvitationType'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
@@ -638,31 +653,29 @@ export type ManagerResolvers<ContextType = any, ParentType extends ResolversPare
   firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  managedTeams?: Resolver<Maybe<Array<ResolversTypes['Team']>>, ParentType, ContextType>;
   phone?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  role?: Resolver<ResolversTypes['UserRole'], ParentType, ContextType>;
   status?: Resolver<ResolversTypes['EntityStatus'], ParentType, ContextType>;
-  teams?: Resolver<Maybe<Array<ResolversTypes['Team']>>, ParentType, ContextType>;
+  teams?: Resolver<Array<ResolversTypes['Team']>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  createAdmin?: Resolver<ResolversTypes['Admin'], ParentType, ContextType, RequireFields<MutationCreateAdminArgs, 'email' | 'firstName' | 'lastName' | 'phone' | 'role'>>;
   createClub?: Resolver<ResolversTypes['Club'], ParentType, ContextType, RequireFields<MutationCreateClubArgs, 'name'>>;
-  createCoach?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationCreateCoachArgs, 'email' | 'firstName' | 'lastName' | 'phone' | 'teamId'>>;
+  createCoach?: Resolver<ResolversTypes['Coach'], ParentType, ContextType, RequireFields<MutationCreateCoachArgs, 'email' | 'firstName' | 'lastName' | 'phone' | 'teamId'>>;
   createPlayer?: Resolver<ResolversTypes['Player'], ParentType, ContextType, RequireFields<MutationCreatePlayerArgs, 'dateOfBirth' | 'firstName' | 'invitationType' | 'lastName' | 'positions' | 'preferredFoot' | 'teamId'>>;
   createTeam?: Resolver<ResolversTypes['Team'], ParentType, ContextType, RequireFields<MutationCreateTeamArgs, 'ageGroup' | 'clubId' | 'name'>>;
-  createUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationCreateUserArgs, 'email' | 'firstName' | 'lastName' | 'phone' | 'role'>>;
+  deleteAdmin?: Resolver<ResolversTypes['Admin'], ParentType, ContextType, RequireFields<MutationDeleteAdminArgs, 'id'>>;
   deleteClub?: Resolver<ResolversTypes['Club'], ParentType, ContextType, RequireFields<MutationDeleteClubArgs, 'id'>>;
-  deleteCoach?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationDeleteCoachArgs, 'id'>>;
+  deleteCoach?: Resolver<ResolversTypes['ID'], ParentType, ContextType, RequireFields<MutationDeleteCoachArgs, 'id'>>;
   deletePlayer?: Resolver<ResolversTypes['Player'], ParentType, ContextType, RequireFields<MutationDeletePlayerArgs, 'id'>>;
   deleteTeam?: Resolver<ResolversTypes['Team'], ParentType, ContextType, RequireFields<MutationDeleteTeamArgs, 'id'>>;
-  deleteUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationDeleteUserArgs, 'id'>>;
+  updateAdmin?: Resolver<ResolversTypes['Admin'], ParentType, ContextType, RequireFields<MutationUpdateAdminArgs, 'id'>>;
   updateClub?: Resolver<ResolversTypes['Club'], ParentType, ContextType, RequireFields<MutationUpdateClubArgs, 'id'>>;
-  updateCoach?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationUpdateCoachArgs, 'id'>>;
+  updateCoach?: Resolver<ResolversTypes['Coach'], ParentType, ContextType, RequireFields<MutationUpdateCoachArgs, 'id'>>;
   updatePlayer?: Resolver<ResolversTypes['Player'], ParentType, ContextType, RequireFields<MutationUpdatePlayerArgs, 'id'>>;
   updateTeam?: Resolver<ResolversTypes['Team'], ParentType, ContextType, RequireFields<MutationUpdateTeamArgs, 'id'>>;
-  updateUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationUpdateUserArgs, 'id'>>;
 };
 
 export type ParentGuardianResolvers<ContextType = any, ParentType extends ResolversParentTypes['ParentGuardian'] = ResolversParentTypes['ParentGuardian']> = {
@@ -676,26 +689,28 @@ export type ParentGuardianResolvers<ContextType = any, ParentType extends Resolv
 
 export type PlayerResolvers<ContextType = any, ParentType extends ResolversParentTypes['Player'] = ResolversParentTypes['Player']> = {
   city?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  clubs?: Resolver<Maybe<Array<ResolversTypes['Club']>>, ParentType, ContextType>;
+  clubs?: Resolver<Array<ResolversTypes['Club']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   dateOfBirth?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  parentGuardians?: Resolver<Maybe<Array<ResolversTypes['ParentGuardian']>>, ParentType, ContextType>;
+  parentGuardians?: Resolver<Array<ResolversTypes['ParentGuardian']>, ParentType, ContextType>;
   positions?: Resolver<Maybe<Array<ResolversTypes['Position']>>, ParentType, ContextType>;
   preferredFoot?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   region?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   skillsCompleted?: Resolver<Maybe<ResolversTypes['Skills']>, ParentType, ContextType>;
   statistics?: Resolver<Maybe<ResolversTypes['Statistics']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['EntityStatus'], ParentType, ContextType>;
-  teams?: Resolver<Maybe<Array<ResolversTypes['Team']>>, ParentType, ContextType>;
+  teams?: Resolver<Array<ResolversTypes['Team']>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  videoHighlights?: Resolver<Maybe<Array<ResolversTypes['VideoHighlight']>>, ParentType, ContextType>;
+  videoHighlights?: Resolver<Array<ResolversTypes['VideoHighlight']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  admin?: Resolver<Maybe<ResolversTypes['Admin']>, ParentType, ContextType, RequireFields<QueryAdminArgs, 'id'>>;
+  admins?: Resolver<Array<ResolversTypes['Admin']>, ParentType, ContextType>;
   club?: Resolver<Maybe<ResolversTypes['Club']>, ParentType, ContextType, RequireFields<QueryClubArgs, 'id'>>;
   clubs?: Resolver<Array<ResolversTypes['Club']>, ParentType, ContextType>;
   coach?: Resolver<Maybe<ResolversTypes['Coach']>, ParentType, ContextType, RequireFields<QueryCoachArgs, 'id'>>;
@@ -713,8 +728,6 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   team?: Resolver<Maybe<ResolversTypes['Team']>, ParentType, ContextType, RequireFields<QueryTeamArgs, 'id'>>;
   teamPlayers?: Resolver<Array<ResolversTypes['Player']>, ParentType, ContextType, RequireFields<QueryTeamPlayersArgs, 'teamId'>>;
   teams?: Resolver<Array<ResolversTypes['Team']>, ParentType, ContextType>;
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryUserArgs, 'id'>>;
-  users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
 };
 
 export type ScoutResolvers<ContextType = any, ParentType extends ResolversParentTypes['Scout'] = ResolversParentTypes['Scout']> = {
@@ -724,7 +737,6 @@ export type ScoutResolvers<ContextType = any, ParentType extends ResolversParent
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   phone?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  role?: Resolver<ResolversTypes['UserRole'], ParentType, ContextType>;
   status?: Resolver<ResolversTypes['EntityStatus'], ParentType, ContextType>;
   teams?: Resolver<Maybe<Array<ResolversTypes['Team']>>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
@@ -756,40 +768,29 @@ export type StatisticsResolvers<ContextType = any, ParentType extends ResolversP
 };
 
 export type SubscriptionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = {
+  adminAdded?: SubscriptionResolver<ResolversTypes['Admin'], "adminAdded", ParentType, ContextType>;
   clubAdded?: SubscriptionResolver<ResolversTypes['Club'], "clubAdded", ParentType, ContextType>;
   playerAdded?: SubscriptionResolver<ResolversTypes['Player'], "playerAdded", ParentType, ContextType>;
   teamAdded?: SubscriptionResolver<ResolversTypes['Team'], "teamAdded", ParentType, ContextType>;
-  userAdded?: SubscriptionResolver<ResolversTypes['User'], "userAdded", ParentType, ContextType>;
 };
 
 export type TeamResolvers<ContextType = any, ParentType extends ResolversParentTypes['Team'] = ResolversParentTypes['Team']> = {
   ageGroup?: Resolver<ResolversTypes['AgeGroup'], ParentType, ContextType>;
   club?: Resolver<ResolversTypes['Club'], ParentType, ContextType>;
-  coaches?: Resolver<Maybe<Array<ResolversTypes['Coach']>>, ParentType, ContextType>;
+  coaches?: Resolver<Array<ResolversTypes['Coach']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  manager?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  manager?: Resolver<Maybe<ResolversTypes['Manager']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  players?: Resolver<Maybe<Array<ResolversTypes['Player']>>, ParentType, ContextType>;
-  scouts?: Resolver<Maybe<Array<ResolversTypes['Scout']>>, ParentType, ContextType>;
+  players?: Resolver<Array<ResolversTypes['Player']>, ParentType, ContextType>;
+  scouts?: Resolver<Array<ResolversTypes['Scout']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['EntityStatus'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
-  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  managedTeams?: Resolver<Maybe<Array<ResolversTypes['Team']>>, ParentType, ContextType>;
-  phone?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  role?: Resolver<ResolversTypes['UserRole'], ParentType, ContextType>;
-  status?: Resolver<ResolversTypes['EntityStatus'], ParentType, ContextType>;
-  teams?: Resolver<Maybe<Array<ResolversTypes['Team']>>, ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Admin' | 'Coach' | 'Manager' | 'Player' | 'Scout', ParentType, ContextType>;
 };
 
 export type VideoHighlightResolvers<ContextType = any, ParentType extends ResolversParentTypes['VideoHighlight'] = ResolversParentTypes['VideoHighlight']> = {
@@ -800,6 +801,7 @@ export type VideoHighlightResolvers<ContextType = any, ParentType extends Resolv
 };
 
 export type Resolvers<ContextType = any> = {
+  Admin?: AdminResolvers<ContextType>;
   BaseEntity?: BaseEntityResolvers<ContextType>;
   Club?: ClubResolvers<ContextType>;
   Coach?: CoachResolvers<ContextType>;

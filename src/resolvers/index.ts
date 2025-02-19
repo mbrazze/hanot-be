@@ -3,8 +3,8 @@ import {
   Resolvers,
   ResolverTypeWrapper,
   Club,
-  Team,
   User,
+  Team,
   Player,
   Manager,
   Coach,
@@ -12,10 +12,13 @@ import {
   Invitation,
   InvitationType,
   EntityStatus,
-  UserRole,
 } from '../generated/graphql';
-import type { Context } from '../contextProvider';
+import type { Context } from '../app/context/contextProvider';
 import { FieldValue } from 'firebase-admin/firestore';
+import {
+  userCollectionNameFromUserType,
+  userGqlTypeFromUserType,
+} from '../app/user/utils';
 
 const DateTime = new GraphQLScalarType({
   name: 'DateTime',
@@ -89,7 +92,7 @@ const resolvers: Resolvers<Context> = {
         name: data.name,
         location: data.location,
         teams: data.teams || [],
-        adminUsers: data.adminUsers || [],
+        adminAdmins: data.adminUsers || [],
       };
     },
     teams: async (
@@ -141,13 +144,19 @@ const resolvers: Resolvers<Context> = {
           id: doc.id,
           createdAt: data.createdAt.toDate(),
           updatedAt: data.updatedAt.toDate(),
-          ...data,
+          status: data.status,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+          role: data.role,
+          teams: data.teams || [],
           managedTeams: data.managedTeams || [],
         } as Manager;
       });
     },
     manager: async (
-      _,
+      parent,
       { id },
       { db, user }
     ): Promise<ResolverTypeWrapper<Manager> | null> => {
@@ -159,13 +168,19 @@ const resolvers: Resolvers<Context> = {
         id: doc.id,
         createdAt: data.createdAt.toDate(),
         updatedAt: data.updatedAt.toDate(),
-        ...data,
+        status: data.status,
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        role: data.role,
+        teams: data.teams || [],
         managedTeams: data.managedTeams || [],
       } as Manager;
     },
     coaches: async (
-      _,
-      __,
+      parent,
+      args,
       { db, user }
     ): Promise<ResolverTypeWrapper<Coach>[]> => {
       if (!user) throw new Error('Not authenticated');
@@ -272,43 +287,37 @@ const resolvers: Resolvers<Context> = {
         ...data,
       } as Player;
     },
-    users: async (
-      _,
-      __,
-      { db, user }
-    ): Promise<ResolverTypeWrapper<User>[]> => {
+    me: async (
+      parent: any,
+      args: any,
+      { user, db }: Context
+    ): Promise<ResolverTypeWrapper<User>> => {
       if (!user) throw new Error('Not authenticated');
-      const snapshot = await db.collection('users').get();
-      return snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          createdAt: data.createdAt.toDate(),
-          updatedAt: data.updatedAt.toDate(),
-          ...data,
-        } as User;
-      });
-    },
-    user: async (
-      _,
-      { id },
-      { db, user }
-    ): Promise<ResolverTypeWrapper<User> | null> => {
-      if (!user) throw new Error('Not authenticated');
-      const doc = await db.collection('users').doc(id).get();
-      if (!doc.exists) return null;
-      const data = doc.data()!;
+
+      const userCollection = userCollectionNameFromUserType(user.userType);
+      const userDoc = await db.collection(userCollection).doc(user.id).get();
+
+      if (!userDoc.exists) {
+        throw new Error('User document not found');
+      }
+
+      const userData = userDoc.data();
+      if (!userData) {
+        throw new Error('User data is empty');
+      }
+
+      const userType = userGqlTypeFromUserType(user.userType);
+
       return {
-        id: doc.id,
-        createdAt: data.createdAt.toDate(),
-        updatedAt: data.updatedAt.toDate(),
-        ...data,
-      } as User;
+        ...userData,
+        id: userDoc.id,
+        createdAt: userData.createdAt.toDate(),
+        updatedAt: userData.updatedAt.toDate(),
+        __typename: userType.__typename,
+        status: userData.status,
+      } as ResolverTypeWrapper<User>;
     },
-    me: (_, __, { user }): ResolverTypeWrapper<User> => {
-      if (!user) throw new Error('Not authenticated');
-      return user as ResolverTypeWrapper<User>;
-    },
+
     myTeams: async (
       _,
       __,
@@ -329,30 +338,42 @@ const resolvers: Resolvers<Context> = {
         } as Team;
       });
     },
+
     pendingInvitations: async (
       _,
       __,
       { user, db }
     ): Promise<ResolverTypeWrapper<Invitation>[]> => {
       if (!user) throw new Error('Not authenticated');
+
       const snapshot = await db
         .collection('invitations')
         .where('status', '==', 'PENDING')
         .where('teamId', 'in', user.managedTeams || [])
         .get();
-      return snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          createdAt: data.createdAt.toDate(),
-          updatedAt: data.updatedAt.toDate(),
-          status: data.status as EntityStatus,
-          playerId: data.playerId,
-          teamId: data.teamId,
-          invitedBy: data.invitedBy,
-          type: data.type as InvitationType,
-        };
-      });
+
+      if (snapshot.empty) {
+        return [];
+      }
+
+      return snapshot.docs
+        .filter((doc) => doc.exists)
+        .map((doc) => {
+          const data = doc?.data();
+          if (!data) {
+            return null;
+          }
+          return {
+            id: doc.id,
+            createdAt: data.createdAt.toDate(),
+            updatedAt: data.updatedAt.toDate(),
+            status: data.status as EntityStatus,
+            playerId: data.playerId,
+            teamId: data.teamId,
+            invitedBy: data.invitedBy,
+            type: data.type as InvitationType,
+          };
+        }) as Invitation[];
     },
     playerRequests: async (
       _,
@@ -378,7 +399,7 @@ const resolvers: Resolvers<Context> = {
           invitedBy: data.invitedBy,
           type: data.type as InvitationType,
         };
-      });
+      }) as Invitation[];
     },
     teamPlayers: async (
       _,
@@ -416,7 +437,7 @@ const resolvers: Resolvers<Context> = {
   },
   Mutation: {
     createPlayer: async (
-      _,
+      parent,
       args,
       { user, db }
     ): Promise<ResolverTypeWrapper<Player>> => {
@@ -461,11 +482,13 @@ const resolvers: Resolvers<Context> = {
         region,
         teams: [{ id: team.id, name: team.name } as Team],
         clubs: team.club ? [team.club] : [],
+        parentGuardians: [],
+        videoHighlights: [],
       };
 
       const newPlayerRef = await db.collection('players').add(newPlayer);
       const newPlayerId = newPlayerRef.id;
-
+      console.log(newPlayerRef);
       if (invitationType === 'DIRECT_ADD') {
         await db
           .collection('teams')
@@ -490,7 +513,7 @@ const resolvers: Resolvers<Context> = {
       _,
       args,
       { user, db }
-    ): Promise<ResolverTypeWrapper<User>> => {
+    ): Promise<ResolverTypeWrapper<Coach>> => {
       if (!user) throw new Error('Not authenticated');
 
       const authorizedRoles = ['SUPER_ADMIN', 'CLUB_ADMIN'];
@@ -506,17 +529,15 @@ const resolvers: Resolvers<Context> = {
         throw new Error(`Team with id ${teamId} not found`);
       }
 
-      const newCoach: Omit<User, 'id'> = {
+      const newCoach: Omit<Coach, 'id'> = {
         createdAt: new Date(),
         updatedAt: new Date(),
-        status: EntityStatus.Active,
-        role: UserRole.Coach,
         firstName,
         lastName,
         email,
         phone,
         teams: [{ id: teamId, name: teamDoc.data()?.name } as Team],
-        managedTeams: [],
+        status: EntityStatus.Active,
       };
 
       const newCoachRef = await db.collection('users').add(newCoach);
@@ -531,14 +552,61 @@ const resolvers: Resolvers<Context> = {
 
       return { id: newCoachId, ...newCoach };
     },
+    createTeam: async (
+      _,
+      args,
+      { user, db }
+    ): Promise<ResolverTypeWrapper<Team>> => {
+      if (!user) throw new Error('Not authenticated');
+
+      const authorizedRoles = ['SUPER_ADMIN', 'CLUB_ADMIN'];
+      if (!authorizedRoles.includes(user.role)) {
+        throw new Error('Not authorized to create a coach');
+      }
+
+      const t = await db.collection('teams').add({
+        name: args.name,
+        ageGroup: args.ageGroup,
+        clubId: args.clubId,
+      });
+
+      console.log(t);
+
+      return {
+        id: t.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: EntityStatus.Active,
+        coaches: [],
+        manager: null,
+        players: [],
+        scouts: [],
+        club: { id: args.clubId } as Club,
+        name: args.name,
+        ageGroup: args.ageGroup,
+      };
+    },
+  },
+  Team: {
+    club: async (parent: Team, args: unknown, { db }: Context) => {
+      const clubDoc = await db.collection('clubs').doc(parent.club.id).get();
+      if (!clubDoc.exists) {
+        throw new Error(`Club with id ${parent.club.id} not found`);
+      }
+      const data = clubDoc.data();
+      return {
+        id: clubDoc.id,
+        createdAt: data?.createdAt.toDate(),
+        updatedAt: data?.updatedAt.toDate(),
+        ...data,
+      } as Club;
+    },
   },
   Player: {
-    // Need to fix this
-    firstName: (parent: Player) => `${parent.firstName} ${parent.lastName}`,
     teams: async (
       parent: Player,
-      _,
-      { db }
+      args: unknown,
+      { db }: Context
     ): Promise<ResolverTypeWrapper<Team>[]> => {
       const snapshot = await db
         .collection('teams')
@@ -554,7 +622,7 @@ const resolvers: Resolvers<Context> = {
         } as Team;
       });
     },
-    skillsCompleted: async (parent: Player, _, { db }) => {
+    skillsCompleted: async (parent: Player, args: unknown, { db }: Context) => {
       const skillsSnapshot = await db
         .collection('skill-levels')
         .where('playerId', '==', parent.id)

@@ -22,6 +22,7 @@
   "type": "module",
   "dependencies": {
     "@apollo/server": "^4.11.3",
+    "@firebase/firestore-types": "^3.0.3",
     "firebase-admin": "^13.1.0",
     "graphql": "^16.10.0"
   },

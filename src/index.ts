@@ -1,6 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { Context, createContext } from './contextProvider';
+import { Context, createContext } from './app/context/contextProvider';
 
 const typeDefs = `#graphql
   type Query {
