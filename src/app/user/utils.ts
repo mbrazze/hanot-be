@@ -5,6 +5,7 @@ import {
   Player,
   Scout,
   Manager,
+  ClubAdmin,
 } from '../../generated/graphql';
 
 export const userCollectionNameFromUserType = (userType: string) => {
@@ -13,6 +14,8 @@ export const userCollectionNameFromUserType = (userType: string) => {
     userDataCollection = 'managers';
   } else if (userType === 'coach') {
     userDataCollection = 'coaches';
+  } else if (userType === 'clubAdmin') {
+    userDataCollection = 'clubAdmins';
   } else if (userType === 'scout') {
     userDataCollection = 'scouts';
   } else if (userType === 'player') {
@@ -28,6 +31,7 @@ export type UserTypeMap = {
   coach: Coach;
   scout: Scout;
   player: Player;
+  clubAdmin: ClubAdmin;
   admin: Admin;
 };
 
@@ -43,6 +47,8 @@ export const userGqlTypeFromUserType = (userType: keyof UserTypeMap): User => {
       return { __typename: 'Player' } as Player;
     case 'admin':
       return { __typename: 'Admin' } as Admin;
+    case 'clubAdmin':
+      return { __typename: 'ClubAdmin' } as ClubAdmin;
     default:
       throw new Error(`Invalid user type: ${userType}`);
   }

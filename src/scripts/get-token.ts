@@ -28,12 +28,15 @@ export enum UserType {
   SCOUT = 'scout',
   PLAYER = 'player',
   ADMIN = 'admin',
+  CLUB_ADMIN = 'clubAdmin',
 }
 
 const userCollectionNameFromUserType = (userType: UserType): string => {
   switch (userType) {
     case UserType.MANAGER:
       return 'managers';
+    case UserType.CLUB_ADMIN:
+      return 'clubAdmins';
     case UserType.COACH:
       return 'coaches';
     case UserType.SCOUT:

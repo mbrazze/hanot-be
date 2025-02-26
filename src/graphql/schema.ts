@@ -10,7 +10,7 @@ const typeDefs = gql`
     PENDING
   }
 
-  union User = Admin | Manager | Coach | Scout | Player
+  union User = Admin | ClubAdmin | Manager | Coach | Scout | Player
 
   enum AgeGroup {
     UNDER_7
@@ -164,6 +164,18 @@ const typeDefs = gql`
     teams: [Team!]!
   }
 
+  type ClubAdmin implements BaseEntity {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    status: EntityStatus!
+    firstName: String!
+    lastName: String!
+    email: String!
+    phone: String!
+    club: Club!
+  }
+
   type Coach implements BaseEntity {
     id: ID!
     createdAt: DateTime!
@@ -254,7 +266,7 @@ const typeDefs = gql`
     deleteTeam(id: ID!): Team!
 
     createPlayer(
-      teamId: ID!
+      teamId: ID
       firstName: String!
       lastName: String!
       dateOfBirth: String!

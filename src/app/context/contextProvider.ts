@@ -28,6 +28,7 @@ initializeApp({
 });
 
 const db = getFirestore();
+db.settings({ ignoreUndefinedProperties: true });
 const auth = getAuth();
 export interface Context {
   user: {
@@ -114,7 +115,7 @@ export async function createContext({
           clubIds: userData.clubIds || [],
           teamIds: userData.teamIds || [],
           id: decodedToken.uid,
-          role: userData.role,
+          role: userTypeDoc.data()?.userType,
           managedTeams: userData.managedTeams || [],
         };
         console.log('User context created:', context.user.id);
