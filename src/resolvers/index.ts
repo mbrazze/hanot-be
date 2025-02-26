@@ -294,7 +294,9 @@ const resolvers: Resolvers<Context> = {
     ): Promise<ResolverTypeWrapper<User>> => {
       if (!user) throw new Error('Not authenticated');
 
-      const userCollection = userCollectionNameFromUserType(user.userType);
+      const userCollection = userCollectionNameFromUserType(
+        user.userType as unknown as string
+      );
       const userDoc = await db.collection(userCollection).doc(user.id).get();
 
       if (!userDoc.exists) {
@@ -306,7 +308,9 @@ const resolvers: Resolvers<Context> = {
         throw new Error('User data is empty');
       }
 
-      const userType = userGqlTypeFromUserType(user.userType);
+      const userType = userGqlTypeFromUserType(
+        user.userType as keyof typeof userGqlTypeFromUserType
+      );
 
       return {
         ...userData,

@@ -15,3 +15,10 @@
 3. build out any field resolvers
 
 - skills on player? See example of `fullName` made of .firstName and .lastName
+
+## Local Dev Improvements
+
+- have npm commands read and process a .env file before running
+  - pass file path to firebase SDK via environment variable
+    OR
+    pass file contents of firebase SDK as base64 value and load manually

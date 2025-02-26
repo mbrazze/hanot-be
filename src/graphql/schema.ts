@@ -46,7 +46,6 @@ const typeDefs = gql`
     id: ID!
     createdAt: DateTime!
     updatedAt: DateTime!
-    status: EntityStatus!
   }
 
   enum Position {
@@ -205,7 +204,6 @@ const typeDefs = gql`
     id: ID!
     createdAt: DateTime!
     updatedAt: DateTime!
-    status: EntityStatus!
     playerId: ID!
     teamId: ID!
     invitedBy: ID!

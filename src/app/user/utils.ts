@@ -18,7 +18,7 @@ export const userCollectionNameFromUserType = (userType: string) => {
   } else if (userType === 'player') {
     userDataCollection = 'players';
   } else if (userType === 'admin') {
-    userDataCollection = 'admins';
+    userDataCollection = 'adminUsers';
   }
   return userDataCollection;
 };
